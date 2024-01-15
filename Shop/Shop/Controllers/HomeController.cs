@@ -1,32 +1,45 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Shop.Models;
-using System.Diagnostics;
+using Shop.Entities;
+using Shop.Repositories;
+using Shop.ViewModels.Home;
 
 namespace Shop.Controllers
 {
     public class HomeController : Controller
     {
-        private readonly ILogger<HomeController> _logger;
-
-        public HomeController(ILogger<HomeController> logger)
-        {
-            _logger = logger;
-        }
-
         public IActionResult Index()
         {
             return View();
         }
-
-        public IActionResult Privacy()
+        public IActionResult Catalog()
         {
             return View();
         }
 
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
+        [HttpGet]
+        public IActionResult Login()
         {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+            return View();
+        }
+
+        [HttpPost]
+        public IActionResult Login(LoginVM model)
+        {
+            if (ModelState.IsValid == false)
+                return View(model);
+
+            UsersRepository repo = new UsersRepository();
+            User loggedUser = repo.GetByUsernameAndPassword(
+                                            model.Username,
+                                            model.Password);
+
+            if (loggedUser == null)
+            {
+                ModelState.AddModelError("authFailed", "Authentication failed!");
+                return View(model);
+            }
+
+            return RedirectToAction("Index", "Home");
         }
     }
 }
